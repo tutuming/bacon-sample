@@ -2,7 +2,6 @@ $(function(){
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
 
-  ctx.lineWidth = 5;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
@@ -57,12 +56,31 @@ $(function(){
 
   var mouseStreamSource = mouseDrawStreamSource($('#canvas'));
   var touchStreamSource = touchDrawStreamSource($('#canvas'));
-
   var strokeStreamSource = mouseStreamSource.merge(touchStreamSource);
 
-  // 座標のストリームを描画
-  strokeStreamSource.onValue(function(stream){
-    var rgb = _(_.range(3)).map(function(){ return Math.floor(Math.random() * 256); }).value().join(',')
+  // 太さ
+  var sizeProperty = Bacon.UI.optionValue($('[name=size]'), '2').map(function(val){
+    return parseInt(val, 10);
+  });
+
+  // 色
+  var colorProperty = Bacon.UI.optionValue($('[name=color]'), 'red').decode({
+    red : 'rgb(255, 0, 0)',
+    green : 'rgb(0, 255, 0)',
+    blue: 'rgb(0, 0, 255)'
+  });
+
+  var options = Bacon.combineTemplate({
+    size : sizeProperty,
+    color : colorProperty
+  });
+
+  // 描画
+  options.sampledBy(strokeStreamSource, function(options, stream){
+    return { options : options, stream : stream };
+  }).onValue(function(args){
+    var options = args.options;
+    var stream = args.stream;
 
     // 2点の組みで返すストリーム
     var pointSetStream = stream.slidingWindow(2).filter(function(points){
@@ -76,14 +94,13 @@ $(function(){
     pointSetStream.onValue(function(points){
       var fromPoint = points[0], toPoint = points[1];
 
-      ctx.strokeStyle = "rgb(" + rgb + ")";
+      ctx.strokeStyle = options.color;
+      ctx.lineWidth = options.size;
+
       ctx.beginPath();
       ctx.moveTo(fromPoint.x, fromPoint.y);
       ctx.lineTo(toPoint.x, toPoint.y);
       ctx.stroke();
-    });
-
-    pointSetStream.onEnd(function(){
     });
   });
 });
