@@ -11,10 +11,9 @@ $(function(){
       return $(document).asEventStream('mousemove').doAction('.preventDefault').takeUntil(
         $(document).asEventStream('mouseup').doAction('.preventDefault')
       ).map(function(e){
-        var offset = $(element).offset();
         return {
-          x : e.clientX - offset.left,
-          y : e.clientY - offset.top
+          x : e.offsetX,
+          y : e.offsetY
         };
       });
     });
@@ -22,7 +21,7 @@ $(function(){
 
   // タッチでの描画座標ストリーム生成
   var touchDrawStreamSource = function(element){
-    return $(this).asEventStream('touchstart').doAction('.preventDefault').flatMap(function(e){
+    return $(element).asEventStream('touchstart').doAction('.preventDefault').flatMap(function(e){
       return Bacon.fromArray(e.originalEvent.changedTouches);
     }).map(function(touch){
       var filterEventContainesTouch = function(stream){
