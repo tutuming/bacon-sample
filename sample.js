@@ -11,9 +11,10 @@ $(function(){
       return $(document).asEventStream('mousemove').doAction('.preventDefault').takeUntil(
         $(document).asEventStream('mouseup').doAction('.preventDefault')
       ).map(function(e){
+        var offset = $(element).offset();
         return {
-          x : e.offsetX,
-          y : e.offsetY
+          x : e.pageX - offset.left,
+          y : e.pageY - offset.top
         };
       });
     });
@@ -46,8 +47,8 @@ $(function(){
       ).map(function(e){
         var offset = $(element).offset();
         return {
-          x : touch.clientX - offset.left,
-          y : touch.clientY - offset.top
+          x : touch.pageX - offset.left,
+          y : touch.pageY - offset.top
         };
       });
     });
